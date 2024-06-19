@@ -26,9 +26,33 @@ var configDiscord = new DiscordSocketConfig
                      | GatewayIntents.GuildMessageTyping
 };
 
+var currentDirectory = Directory.GetCurrentDirectory();
+var possibleAppSettingLocations = new[]
+{
+    Path.Combine(currentDirectory, "appsettings.json"),
+    Path.Combine(currentDirectory, "..", "appsettings.json"),
+    Path.Combine(currentDirectory, "..", "..", "appsettings.json"),
+    Path.Combine(currentDirectory, "..", "..", "..", "appsettings.json"),
+    Path.Combine(currentDirectory, "..", "..", "..", "..", "appsettings.json"),
+    Path.Combine(currentDirectory, "..", "..", "..", "..", "..", "appsettings.json"),
+    Path.Combine(currentDirectory, "..", "..", "..", "..", "..", "..", "appsettings.json"),
+};
+
+
+
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+
+
+foreach (var possibleAppSettingLocation in possibleAppSettingLocations)
+{
+    if (File.Exists(possibleAppSettingLocation))
+    {
+        builder.Configuration.AddJsonFile(possibleAppSettingLocation, false, true);
+        break;
+    }
+}
 
 builder.Logging.AddConsole();
 builder.Configuration.AddEnvironmentVariables();
