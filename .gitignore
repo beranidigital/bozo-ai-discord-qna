@@ -215,3 +215,4 @@ FodyWeavers.xsd
 *.sln.iml
 .vscode
 .idea
+appsettings.json
