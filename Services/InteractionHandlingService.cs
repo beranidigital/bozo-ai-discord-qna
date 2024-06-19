@@ -35,7 +35,8 @@ public class InteractionHandlingService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _discord.Ready += () => _interactions.RegisterCommandsGloballyAsync(true);
+        //_discord.Ready += () => _interactions.RegisterCommandsGloballyAsync(true);
+        _discord.Ready += RegisterToAllGuild;
         _discord.InteractionCreated += OnInteractionAsync;
 
         await _interactions.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
@@ -45,6 +46,15 @@ public class InteractionHandlingService : IHostedService
     {
         _interactions.Dispose();
         return Task.CompletedTask;
+    }
+
+
+    private async Task RegisterToAllGuild()
+    {
+        foreach (var guild in _discord.Guilds)
+        {
+            await _interactions.RegisterCommandsToGuildAsync(guild.Id);
+        }
     }
 
     private async Task OnInteractionAsync(SocketInteraction interaction)

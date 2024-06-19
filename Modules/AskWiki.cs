@@ -29,21 +29,54 @@ public class AskWiki : InteractionModuleBase<SocketInteractionContext>
         await DeferAsync();
         var client = new HttpClient();
         var request = new HttpRequestMessage(HttpMethod.Post, this._options.AskWikiURL);
-        var contentDict = new Dictionary<string, string>();
-        contentDict.Add("input", question);
-        var content = JsonConvert.SerializeObject(contentDict);
+        var input = new Input
+        {
+            InputInput = new InputClass
+            {
+                Input = question
+            }
+        };
+        var content = JsonConvert.SerializeObject(input);
         request.Content = new StringContent(content, Encoding.UTF8, "application/json");
         var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var responseContent = await response.Content.ReadAsStringAsync();
-        var responseDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseContent);
-        if (!responseDict?.ContainsKey("output") ?? true)
+        var responseDict = JsonConvert.DeserializeObject<Output>(responseContent);
+        if (responseDict == null)
         {
-            await FollowupAsync("I'm sorry, I don't have an answer for that.");
+            await FollowupAsync("No response from the server.");
             return;
         }
 
-        var answer = responseDict["output"];
-        await FollowupAsync(answer);
+        await FollowupAsync(responseDict.OutputOutput.Output);
+    }
+
+    public partial class Input
+    {
+        [JsonProperty("input")] public InputClass InputInput { get; set; }
+    }
+
+    public partial class InputClass
+    {
+        [JsonProperty("input")] public string Input { get; set; }
+    }
+
+    public partial class Output
+    {
+        [JsonProperty("output")] public OutputClass OutputOutput { get; set; }
+
+        [JsonProperty("metadata")] public Metadata Metadata { get; set; }
+    }
+
+    public partial class Metadata
+    {
+        [JsonProperty("run_id")] public Guid RunId { get; set; }
+
+        [JsonProperty("feedback_tokens")] public object[] FeedbackTokens { get; set; }
+    }
+
+    public partial class OutputClass
+    {
+        [JsonProperty("output")] public string Output { get; set; }
     }
 }
