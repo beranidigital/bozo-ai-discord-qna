@@ -30,6 +30,11 @@ public class DiscordStartupService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        if(string.IsNullOrWhiteSpace(_options.Value.DiscordToken))
+        {
+            _logger.LogError("Discord token is not set. Please set the DiscordToken configuration value.");
+            Environment.Exit(1);
+        }
         await _discord.LoginAsync(TokenType.Bot, _options.Value.DiscordToken);
         await _discord.StartAsync();
     }

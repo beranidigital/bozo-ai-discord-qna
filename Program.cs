@@ -28,42 +28,12 @@ var configDiscord = new DiscordSocketConfig
 
 
 var builder = Host.CreateApplicationBuilder(args);
-var currentDirectory = Directory.GetCurrentDirectory();
-var possibleAppSettingLocations = new[]
-{
-    Path.Combine(currentDirectory, "appsettings.json"),
-    Path.Combine(currentDirectory, "..", "appsettings.json"),
-    Path.Combine(currentDirectory, "..", "..", "appsettings.json"),
-    Path.Combine(currentDirectory, "..", "..", "..", "appsettings.json"),
-    Path.Combine(currentDirectory, "..", "..", "..", "..", "appsettings.json"),
-    Path.Combine(currentDirectory, "..", "..", "..", "..", "..", "appsettings.json"),
-    Path.Combine(currentDirectory, "..", "..", "..", "..", "..", "..", "appsettings.json"),
-};
-
-builder.Configuration.SetBasePath(currentDirectory);
 builder.Configuration.AddEnvironmentVariables();
-
-bool foundAppSetting = false;
-foreach (var possibleAppSettingLocation in possibleAppSettingLocations)
-{
-    if (File.Exists(possibleAppSettingLocation))
-    {
-        foundAppSetting = true;
-        builder.Configuration.AddJsonFile(possibleAppSettingLocation, false, true);
-        break;
-    }
-}
-
-if (!foundAppSetting)
-{
-    throw new FileNotFoundException("Could not find appsettings.json");
-}
 
 builder.Logging.AddConsole();
 builder.Configuration.AddEnvironmentVariables();
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Services.Configure<Configuration>(
-    builder.Configuration.GetSection(Configuration.SectionName)); // Add the EqueConfiguration to services
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+builder.Services.Configure<Configuration>(builder.Configuration);
 
 
 builder.Services.AddSingleton(new DiscordSocketClient(configDiscord)); // Add the discord client to services
