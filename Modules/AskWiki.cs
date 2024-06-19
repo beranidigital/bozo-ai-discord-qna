@@ -27,28 +27,36 @@ public class AskWiki : InteractionModuleBase<SocketInteractionContext>
         }
 
         await DeferAsync();
-        var client = new HttpClient();
-        var request = new HttpRequestMessage(HttpMethod.Post, this._options.AskWikiURL);
-        var input = new Input
+        try
         {
-            InputInput = new InputClass
+            var client = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Post, this._options.AskWikiURL);
+            var input = new Input
             {
-                Input = question
+                InputInput = new InputClass
+                {
+                    Input = question
+                }
+            };
+            var content = JsonConvert.SerializeObject(input);
+            request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+            var response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseDict = JsonConvert.DeserializeObject<Output>(responseContent);
+            if (responseDict == null)
+            {
+                await FollowupAsync("No response from the server.");
+                return;
             }
-        };
-        var content = JsonConvert.SerializeObject(input);
-        request.Content = new StringContent(content, Encoding.UTF8, "application/json");
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var responseDict = JsonConvert.DeserializeObject<Output>(responseContent);
-        if (responseDict == null)
-        {
-            await FollowupAsync("No response from the server.");
-            return;
-        }
 
-        await FollowupAsync(responseDict.OutputOutput.Output);
+            await FollowupAsync(responseDict.OutputOutput.Output);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while asking wiki.");
+            await FollowupAsync("An error occurred while asking wiki.");
+        }
     }
 
     public partial class Input
