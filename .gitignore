@@ -214,3 +214,4 @@ FodyWeavers.xsd
 *.msp
 *.sln.iml
 .vscode
+.idea
